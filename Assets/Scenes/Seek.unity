@@ -235,7 +235,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 274c8959528358741933c8adfa969e14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfBoids: 5
+  numberOfBoids: 25
   boidPrefab: {fileID: 2576284430708207586, guid: 9860cce1c1130d44fb92a3d1deb248a8, type: 3}
 --- !u!4 &1884793351
 Transform:

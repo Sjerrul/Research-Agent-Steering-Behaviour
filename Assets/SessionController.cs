@@ -30,28 +30,38 @@ public class SessionController : MonoBehaviour
     {
         boids = new Boid[numberOfBoids];
 
-        var points = PoissonDiscSampling.GeneratePoints(0.2f, new Vector2(5, 5), 10);
-        for (int i = 0; i < numberOfBoids; i++)
-        {
-            var boid = Instantiate(boidPrefab);
-            boid.transform.position = points[i];
-            
-            boids[i] = boid;
-        }
+         var points = PoissonDiscSampling.GeneratePoints(0.2f, new Vector2(5, 5), 10);
+         for (int i = 0; i < numberOfBoids; i++)
+         {
+             var boid = Instantiate(boidPrefab);
+             boid.transform.position = points[i];
+             
+             boids[i] = boid;
+         }
 
         target = Instantiate(boidPrefab);
         target.GetComponent<SpriteRenderer>().color = Color.red;
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
         Vector3 mousePosition = Input.mousePosition;
         for (int i = 0; i < boids.Length; i++)
         {
-            boids[i].Seek(target.transform.position + (target.transform.right * 2));
+            var pursueForce = boids[i].Seek(target.transform.position);
+            boids[i].ApplyForce(pursueForce);
+            
+            List<Collider2D> results = new List<Collider2D>();
+            Vector2 pos = new Vector2(boids[i].transform.position.x, boids[i].transform.position.y);
+            Physics2D.OverlapCircle(pos, boids[i].visionDistance, new ContactFilter2D(), results);
+            foreach (var boid in results)
+            {
+                var evadeForce = boids[i].Evade(boid.GetComponent<Boid>());
+                boids[i].ApplyForce(evadeForce);
+            }
         }
         
-        target.Seek(Camera.main.ScreenToWorldPoint(mousePosition));
+        var steeringForce = target.Seek(Camera.main.ScreenToWorldPoint(mousePosition));
+        target.ApplyForce(steeringForce);
     }
 }

@@ -5,15 +5,22 @@ using UnityEngine;
 
 public class Boid : MonoBehaviour
 {
-    public float speed = 2f;
-    public float rotationSpeed = 2f;
-    public float pursuit = 2f;
-
     private SpriteRenderer spriteRenderer;
 
+    public Vector2 velocity;
+    public Vector2 acceleration;
+    
+    public float maximumSpeed = 2.0f;
+    public float maximumForce = 0.02f;
+    public float pursuitDistanceEstimation = 3f;
+    public float visionDistance = 1f;
+    
     void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        this.spriteRenderer = GetComponent<SpriteRenderer>();
+        this.velocity = new Vector2(0, 0);
+        this.acceleration = new Vector2(0, 0);
+        
     }
     
     // Start is called before the first frame update
@@ -25,8 +32,16 @@ public class Boid : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        this.transform.position += transform.right * speed * Time.deltaTime;
-
+        var directionVector = new Vector3(this.velocity.x, this.velocity.y, this.transform.position.z);
+        this.velocity += this.acceleration;
+        this.velocity = this.velocity.normalized * maximumSpeed;
+        this.transform.position += directionVector * Time.deltaTime;
+        this.acceleration = Vector2.zero;
+        
+        float angle = Mathf.Atan2(directionVector.y, directionVector.x) * Mathf.Rad2Deg;
+        Quaternion q = Quaternion.AngleAxis(angle, Vector3.forward);
+        transform.rotation = q;
+ 
         Vector3 pointOnScreen = Camera.main.WorldToScreenPoint(spriteRenderer.bounds.center);
         if (pointOnScreen.x < 0 || pointOnScreen.x > Screen.width)
         {
@@ -39,22 +54,38 @@ public class Boid : MonoBehaviour
         }
     }
 
-    public void Seek(Vector3 target)
+    public void ApplyForce(Vector2 force)
     {
-        Vector3 vectorToTarget = target - transform.position;
-        float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg;
-        
-        Quaternion q = Quaternion.AngleAxis(angle, Vector3.forward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * rotationSpeed);
+        this.acceleration += force;
+    }
+
+    public Vector2 Seek(Vector2 target)
+    {
+        Vector2 desiredVector = target - new Vector2(transform.position.x, transform.position.y);
+        desiredVector = desiredVector.normalized * maximumSpeed;
+
+        var steering = desiredVector - this.velocity;
+        steering = steering.normalized * maximumForce;
+        return steering;
     }
     
-    public void Flee(Vector3 target)
+    public Vector2 Flee(Vector2 target)
     {
-        Vector3 vectorToTarget = target - transform.position;
-        float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg;
-        angle -= 180;
-        
-        Quaternion q = Quaternion.AngleAxis(angle, Vector3.forward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, rotationSpeed * Time.deltaTime);
+        return Seek(target) * -1;
+    }
+    
+    public Vector2 Pursue(Boid target)
+    {
+        Vector2 pursuePoint = target.transform.position;
+        pursuePoint = pursuePoint + target.velocity * pursuitDistanceEstimation;
+
+        return Seek(pursuePoint);
+    }
+    
+    public Vector2 Evade(Boid target)
+    {
+        Vector2 force = Pursue(target);
+
+        return force * -1;
     }
 }
