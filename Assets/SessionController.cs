@@ -4,10 +4,27 @@ using UnityEngine;
 
 public class SessionController : MonoBehaviour
 {
+    private static SessionController instance;
+    
     public int numberOfBoids = 1;
     public Boid boidPrefab;
     
     private Boid[] boids;
+    private Boid target;
+    
+    public static SessionController Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                GameObject go = new GameObject();
+                instance = go.AddComponent<SessionController>();
+            }
+
+            return instance;
+        }
+    }
 
     void Awake()
     {
@@ -21,6 +38,9 @@ public class SessionController : MonoBehaviour
             
             boids[i] = boid;
         }
+
+        target = Instantiate(boidPrefab);
+        target.GetComponent<SpriteRenderer>().color = Color.red;
     }
 
     // Update is called once per frame
@@ -29,7 +49,9 @@ public class SessionController : MonoBehaviour
         Vector3 mousePosition = Input.mousePosition;
         for (int i = 0; i < boids.Length; i++)
         {
-            boids[i].Seek(Camera.main.ScreenToWorldPoint(mousePosition));
+            boids[i].Seek(target.transform.position + (target.transform.right * 2));
         }
+        
+        target.Seek(Camera.main.ScreenToWorldPoint(mousePosition));
     }
 }

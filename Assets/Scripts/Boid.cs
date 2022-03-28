@@ -7,12 +7,13 @@ public class Boid : MonoBehaviour
 {
     public float speed = 2f;
     public float rotationSpeed = 2f;
+    public float pursuit = 2f;
 
     private SpriteRenderer spriteRenderer;
+
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-
     }
     
     // Start is called before the first frame update
@@ -42,8 +43,18 @@ public class Boid : MonoBehaviour
     {
         Vector3 vectorToTarget = target - transform.position;
         float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg;
+        
         Quaternion q = Quaternion.AngleAxis(angle, Vector3.forward);
         transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * rotationSpeed);
     }
     
+    public void Flee(Vector3 target)
+    {
+        Vector3 vectorToTarget = target - transform.position;
+        float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg;
+        angle -= 180;
+        
+        Quaternion q = Quaternion.AngleAxis(angle, Vector3.forward);
+        transform.rotation = Quaternion.Slerp(transform.rotation, q, rotationSpeed * Time.deltaTime);
+    }
 }
