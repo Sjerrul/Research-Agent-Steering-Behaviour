@@ -8,15 +8,17 @@ public class SessionController : MonoBehaviour
     public Boid boidPrefab;
     
     private Boid[] boids;
-    
-    // Start is called before the first frame update
-    void Start()
+
+    void Awake()
     {
         boids = new Boid[numberOfBoids];
 
+        var points = PoissonDiscSampling.GeneratePoints(0.2f, new Vector2(5, 5), 10);
         for (int i = 0; i < numberOfBoids; i++)
         {
             var boid = Instantiate(boidPrefab);
+            boid.transform.position = points[i];
+            
             boids[i] = boid;
         }
     }
